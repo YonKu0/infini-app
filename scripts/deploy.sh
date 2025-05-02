@@ -33,7 +33,7 @@ Options:
   -h                 Show this help message
 
 Example:
-  $0 -i 192.168.42.10 -k ~/.ssh/infini_ops_id -d myapp -p 5050
+  $0 -i 127.0.0.1 -k secrets/infini_ops_id_ed25519  -P 2222
 EOF
   exit 1
 }

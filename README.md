@@ -55,12 +55,12 @@ Before you begin, ensure the following are installed on your host machine:
 1. Download the latest Fedora CoreOS QEMU image:
 
    ```bash
-   curl -LO https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/42.20250410.3.1/x86_64/fedora-coreos-42.20250410.3.1-qemu.x86_64.qcow2.xz
+   curl -LO https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/41.20250315.3.0/x86_64/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
    ```
 2. Decompress the image:
 
    ```bash
-   xz -d fedora-coreos-42.20250410.3.1-qemu.x86_64.qcow2.xz
+   xz -d fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
    ```
 
 
@@ -130,7 +130,7 @@ Use the following base command to launch the VM. Append the appropriate **accele
 ```bash
 qemu-system-x86_64 \
   -m 8096 -smp 2 \
-  -drive if=virtio,file=fedora-coreos-42.20250410.3.1-qemu.x86_64.qcow2 \
+  -drive if=virtio,file=fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2 \
   -fw_cfg name=opt/com.coreos/config,file=config.ign \
   -nic user,hostfwd=tcp::2222-:22,hostfwd=tcp::5050-:5050,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443,hostfwd=tcp::9090-:9090 \
   -nic user,model=virtio
@@ -180,41 +180,65 @@ sudo reboot
 ip addr | grep 'inet 192.168.'
 ```
 
+## How `deploy.sh` Works
+
+The `deploy.sh` script automates the deployment of your Docker Compose application and Prometheus on a Fedora CoreOS VM:
+
+1. **Pre-flight checks**: Verifies you have `ssh`, `scp`, `ping`, `curl` and that `docker-compose.yml` and `prometheus.yml` exist in your local app directory.
+2. **VM reachability & SSH wait**: Pings the VM and retries SSH until it's reachable.
+3. **Port conflict scan**: Ensures nothing else is listening on your app (5050) or Prometheus (9090) ports on the VM.
+4. **Copy files**: Uses `scp` to push your application code and config files into `~/$APP_DIR` on the VM.
+5. **Deploy stack**: SSHes into the VM, tears down any existing stack, builds images, and brings up containers in the background.
+6. **Health-check**: Polls the `/metrics` endpoint until it returns HTTP 200 with valid Prometheus output.
+
+
 ## Deployment
 
-1. On your local machine, ensure you’re in the project root directory.
-2. Run the deployment script:
+1. From your project root, run:
 
    ```bash
-   bash scripts/deploy.sh -i localhost  -k secrets/infini_ops_id_ed25519 -P 2222
+   bash scripts/deploy.sh \
+     -i <VM_IP> \
+     -k <SSH_KEY> \
+     -P <SSH_PORT> \
+     [-u <SSH_USER>] \
+     [-d <APP_DIR>] \
+     [-p <APP_PORT>]
    ```
 
-   * `-i`: VM IP address
-   * `-k`: SSH key file
-   * `-P`: SSH port
+2. Common flags:
 
-The script will:
+   * `-i`: VM IP address (required)
+   * `-k`: SSH key file (default: `~/.ssh/id_rsa`)
+   * `-P`: SSH port on VM (default: `22`)
+   * `-u`: SSH username (default: `infini-ops`)
+   * `-d`: Remote directory (default: `app`)
+   * `-p`: Application port (default: `5050`)
 
-* Copy application code, Dockerfiles, and Prometheus configs to the VM
-* Build and start the application and Prometheus containers
-* Validate the `/metrics` endpoint
+**Example:**
+
+```bash
+bash scripts/deploy.sh \
+  -i localhost \
+  -k secrets/infini_ops_id_ed25519 \
+  -P 2222
+```
 
 ## Post-Deployment Testing
 
-From your host machine, verify the following:
+On your host machine, verify:
 
 * **Application metrics:**
 
   ```bash
   curl http://localhost:5050/metrics
   ```
-* **REST API endpoint:**
+* **API endpoint:**
 
   ```bash
   curl http://localhost:5050/api/items
   ```
-* **Prometheus UI:**
-  Open in browser: `http://localhost:9090`
+* **Prometheus UI:** Open `http://localhost:9090` in your browser.
 
 ### Database Write Test
 
@@ -235,20 +259,19 @@ Expected JSON response:
 
 ## Persistence Verification
 
-Reboot the VM again:
+1. Reboot the VM:
 
-```bash
-sudo reboot
-```
+   ```bash
+   sudo reboot
+   ```
+2. SSH back in and confirm:
 
-After reconnecting via SSH, ensure:
+   * The random IP is unchanged.
+   * Both containers are running:
 
-* The random IP address is unchanged
-* Application and Prometheus containers are running:
-
-  ```bash
-  docker ps | grep -E 'infini-app|prometheus'
-  ```
+     ```bash
+     docker ps | grep -E 'infini-app|prometheus'
+     ```
 
 ## Troubleshooting
 
