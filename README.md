@@ -277,8 +277,8 @@ Expected JSON response:
 * **Multistage Docker build** balances build-time dependencies isolation and minimal runtime footprint.
 * **docker-compose** chosen for simplicity in a single‑node context; could be replaced by Kubernetes in larger deployments.
 * **Retry logic** and **port checks** in `deploy.sh` increase robustness against transient network issues and resource conflicts.
-* **Shell-based deployment script (deploy.sh) offers portability and minimal dependencies, but may be harder to maintain long-term compared to a structured language like Python (e.g., for argument parsing, logging, error handling).
-* **Project-local SSH key (secrets/ directory) improves automation and self-containment for deployment, and was primarily chosen for demonstration purposes — to avoid modifying or relying on existing SSH keys across different machines running the demo. However, this approach introduces security considerations (e.g., accidental Git commits if not .gitignored) and diverges from the standard ~/.ssh location, which may confuse users or interfere with tools expecting default key paths.
+* **Shell-based deployment script** (deploy.sh) offers portability and minimal dependencies, but may be harder to maintain long-term compared to a structured language like Python (e.g., for argument parsing, logging, error handling).
+* **Project-local SSH key (secrets/ directory)** improves automation and self-containment for deployment, and was primarily chosen for demonstration purposes — to avoid modifying or relying on existing SSH keys across different machines running the demo. However, this approach introduces security considerations (e.g., accidental Git commits if not .gitignored) and diverges from the standard ~/.ssh location, which may confuse users or interfere with tools expecting default key paths.
 ---
 ## Future Improvements
 * **Scaling:** Migrate to Kubernetes or Nomad for dynamic service discovery and horizontal scaling.
