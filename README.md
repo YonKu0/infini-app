@@ -42,7 +42,7 @@ Before you begin, ensure the following are installed on your host machine:
 Clone the project repository:
 
    ```bash
-   git clone https://github.com/YonKu0/infini-app.git
+   git clone https://github.com/YonKu0/infini-app.git && cd infini-app
    ```
 
 ## Download Fedora CoreOS
