@@ -19,12 +19,6 @@
 
 ---
 
-### Note on `localhost`
-
-> Throughout this guide, `localhost` is used to refer to the local loopback address. You may substitute `localhost` with `127.0.0.1` in any command or URL — both are functionally equivalent.
-
----
-
 ## Prerequisites
 
 Before you begin, ensure the following are installed on your host machine:
