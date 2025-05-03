@@ -285,6 +285,7 @@ Expected JSON response:
 * **Security:** Integrate TLS certificates via Let’s Encrypt; enable Docker Content Trust, add container image scanning using tools like Trivy, Docker Scout, or Grype.
 * **Observability:** Add Grafana dashboards; integrate centralized logging (ELK or Loki).
 * **High Availability:** Use multiple VM replicas with a load‑balancer and shared persistence (NFS or Object Storage).
+* **Application Management:** Introduced optional Gunicorn-based entry point in the Dockerfile for production-ready deployments, added a wsgi.py file. This enables a cleaner startup and better integration with WSGI-compatible servers like Gunicorn.
 ---
 ## Resources & References
 * Fedora CoreOS docs: [https://docs.fedoraproject.org/en-US/fedora-coreos/](https://docs.fedoraproject.org/en-US/fedora-coreos/)
