@@ -39,28 +39,25 @@ Before you begin, ensure the following are installed on your host machine:
 
 ## Repository Setup
 
-1. Clone the project repository:
+Clone the project repository:
 
    ```bash
    git clone https://github.com/YonKu0/infini-app.git
    ```
-2. Change into the vm configuration directory:
-
-   ```bash
-   cd infini-app/vm-config
-   ```
 
 ## Download Fedora CoreOS
 
-1. Download the latest Fedora CoreOS QEMU image:
+1. Download Fedora CoreOS QEMU v41.20250315.3.0 image:
 
    ```bash
-   curl -LO https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/41.20250315.3.0/x86_64/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
+  curl -Lo vm-config/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz \
+  https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/41.20250315.3.0/x86_64/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
    ```
+   
 2. Decompress the image:
 
    ```bash
-   xz -d fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
+  xz -d vm-config/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
    ```
 
 
@@ -68,7 +65,7 @@ Before you begin, ensure the following are installed on your host machine:
 
 ### Generate SSH Key Pair (One-Time Setup)
 
-If you don’t already have an SSH key pair for this project, generate one:
+Generate an SSH key pair for this project. 
 
 ```bash
 mkdir secrets && ssh-keygen -t ed25519 -f secrets/infini_ops_id_ed25519 -C "infini-ops" -N ""
@@ -117,8 +114,8 @@ sed -i '' -E "s|^([[:space:]]*-[[:space:]]*)ssh-ed25519[[:space:]]+.*|\1${pubkey
 Then regenerate the ignition config:
 
 ```bash
-docker run --rm -i -v "$(pwd):/pwd" quay.io/coreos/butane:release \
-  --pretty < butane-config.yml > config.ign
+docker run --rm -i -v "$PWD/vm-config:/pwd" quay.io/coreos/butane:release \
+  --pretty < vm-config/butane-config.yml > vm-config/config.ign
 ```
 
 ## Launch the VM with QEMU
@@ -130,8 +127,8 @@ Use the following base command to launch the VM. Append the appropriate **accele
 ```bash
 qemu-system-x86_64 \
   -m 8096 -smp 2 \
-  -drive if=virtio,file=fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2 \
-  -fw_cfg name=opt/com.coreos/config,file=config.ign \
+  -drive if=virtio,file=vm-config/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2 \
+  -fw_cfg name=opt/com.coreos/config,file=vm-config/config.ign \
   -nic user,hostfwd=tcp::2222-:22,hostfwd=tcp::5050-:5050,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443,hostfwd=tcp::9090-:9090 \
   -nic user,model=virtio
 ```
@@ -147,21 +144,16 @@ To improve performance, add the following flag depending on your platform:
 
 ## SSH Access
 
-1. Open a new terminal and navigate to your secrets directory:
-
-   ```bash
-   cd secrets
-   ```
-2. Ensure your SSH agent is running and load your key:
+1. Ensure your SSH agent is running and load your key:
 
    ```bash
    eval "$(ssh-agent -s)"
-   ssh-add infini_ops_id_ed25519
+   ssh-add secrets/infini_ops_id_ed25519
    ```
-3. Wait for the VM to fully boot and connect to it:
+2. Wait for the VM to fully boot and connect to it:
 
    ```bash
-   ssh -i infini_ops_id_ed25519 -p 2222 infini-ops@localhost
+   ssh -i secrets/infini_ops_id_ed25519 -p 2222 infini-ops@localhost
    ```
 
 ## Validate Random IP Address
@@ -218,10 +210,10 @@ The `deploy.sh` script automates the deployment of your Docker Compose applicati
 **Example:**
 
 ```bash
-bash scripts/deploy.sh \
-  -i localhost \
-  -k secrets/infini_ops_id_ed25519 \
-  -P 2222
+ bash scripts/deploy.sh \
+   -i localhost \
+   -k secrets/infini_ops_id_ed25519 \
+   -P 2222
 ```
 
 ## Post-Deployment Testing
