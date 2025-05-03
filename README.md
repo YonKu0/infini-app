@@ -50,14 +50,14 @@ Clone the project repository:
 1. Download Fedora CoreOS QEMU v41.20250315.3.0 image:
 
    ```bash
-  curl -Lo vm-config/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz \
-  https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/41.20250315.3.0/x86_64/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
+   curl -Lo vm-config/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz \
+   https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/41.20250315.3.0/x86_64/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
    ```
    
 2. Decompress the image:
 
    ```bash
-  xz -d vm-config/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
+   xz -d vm-config/fedora-coreos-41.20250315.3.0-qemu.x86_64.qcow2.xz
    ```
 
 
