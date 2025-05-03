@@ -268,7 +268,7 @@ Expected JSON response:
 ## Troubleshooting
 
 * **Port Collisions:** Ensure ports `22`, `5050`, `80`, `443`, and `9090` are free on your host.
-* **SSH Failures:** Confirm your SSH key permissions (`chmod 600`) and that the agent has your key.
+* **SSH Failures:** Confirm your SSH key permissions (`chmod 600`) and the agent has your key.
 * **Ignition Errors:** Use `butane --strict` locally to validate your `butane-config.yml`.
 * **Disk Space:** Verify you have enough disk space for the CoreOS image and containers.
 
@@ -280,9 +280,9 @@ Expected JSON response:
 ---
 ## Future Improvements
 * **Scaling:** Migrate to Kubernetes or Nomad for dynamic service discovery and horizontal scaling.
-* **Security:** Integrate TLS certificates via Let’s Encrypt; enable Docker Content Trust.
+* **Security:** Integrate TLS certificates via Let’s Encrypt; enable Docker Content Trust, add container image scanning using tools like Trivy, Docker Scout, or Grype.
 * **Observability:** Add Grafana dashboards; integrate centralized logging (ELK or Loki).
-* **High Availability:** Use multiple VM replicas with load‑balancer and shared persistence (NFS or Object Storage).
+* **High Availability:** Use multiple VM replicas with a load‑balancer and shared persistence (NFS or Object Storage).
 ---
 ## Resources & References
 * Fedora CoreOS docs: [https://docs.fedoraproject.org/en-US/fedora-coreos/](https://docs.fedoraproject.org/en-US/fedora-coreos/)
