@@ -271,3 +271,21 @@ Expected JSON response:
 * **SSH Failures:** Confirm your SSH key permissions (`chmod 600`) and that the agent has your key.
 * **Ignition Errors:** Use `butane --strict` locally to validate your `butane-config.yml`.
 * **Disk Space:** Verify you have enough disk space for the CoreOS image and containers.
+
+## Design Decisions & Trade‑Offs
+* **Butane + Ignition** allows fully automated, reproducible VM bootstrapping without manual provisioning. Using `ConditionFirstBoot=yes` ensures the random IP assignment runs only once.
+* **Multistage Docker build** balances build-time dependencies isolation and minimal runtime footprint.
+* **docker-compose** chosen for simplicity in a single‑node context; could be replaced by Kubernetes in larger deployments.
+* **Retry logic** and **port checks** in `deploy.sh` increase robustness against transient network issues and resource conflicts.
+---
+## Future Improvements
+* **Scaling:** Migrate to Kubernetes or Nomad for dynamic service discovery and horizontal scaling.
+* **Security:** Integrate TLS certificates via Let’s Encrypt; enable Docker Content Trust.
+* **Observability:** Add Grafana dashboards; integrate centralized logging (ELK or Loki).
+* **High Availability:** Use multiple VM replicas with load‑balancer and shared persistence (NFS or Object Storage).
+---
+## Resources & References
+* Fedora CoreOS docs: [https://docs.fedoraproject.org/en-US/fedora-coreos/](https://docs.fedoraproject.org/en-US/fedora-coreos/)
+* Butane GitHub: [https://github.com/coreos/butane](https://github.com/coreos/butane)
+* Docker best practices: [https://docs.docker.com/develop/develop-images/dockerfile\_best-practices/](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+* Prometheus docs: [https://prometheus.io/docs/](https://prometheus.io/docs/)
