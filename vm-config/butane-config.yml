@@ -23,41 +23,37 @@ storage:
         verification:
           hash: "sha256-4adc92c5a4714bf5b10c2cd78f8c3bc63e52e80151c216f8944b6a33795d164d"
 
-    # Docker Compose CLI plugin with verification
-    - path: /usr/local/bin/docker-compose
-      mode: 0755
-      user:
-        name: infini-ops
+    # Configure Zincati’s maintenance window
+    - path: /etc/zincati/config.d/maintenance.toml
+      mode: 0644
       contents:
-        source: "https://github.com/docker/compose/releases/download/v2.35.1/docker-compose-linux-x86_64"
-        verification:
-          hash: "sha256-7bdb2ce2916e5dd0354e5d129892bf96fdcdb1a9ab8eed69b9173e131db4c230"
-
-    # Docker Buildx CLI plugin with verification
-    - path: /usr/local/lib/docker/cli-plugins/docker-buildx
-      mode: 0755
-      user:
-        name: infini-ops
-      contents:
-        source: "https://github.com/docker/buildx/releases/download/v0.23.0/buildx-v0.23.0.linux-amd64"
-        verification:
-          hash: "sha256-55838fdd095084e158e06a63635a07fe8a8bc6cb4db507f203394dc1ffa7fb8b"
+        inline: |
+          [updates]
+          time_zone = "UTC"
+          # Poll for new commits every hour
+          check_interval = "1h"
+          # Only reboot between 02:00–03:00 UTC
+          reboot = "02:00/03:00"
 
 systemd:
   units:
-    # Assign random IP on first boot
-    - name: set-random-ip.service
+    # Layer in Docker CE + Compose/Buildx via official Docker RPMs
+    - name: rpm-ostree-install.service
       enabled: true
       contents: |
         [Unit]
-        Description=Set random static IP on first boot only
+        Description=Layer Docker Compose & plugins via rpm-ostree
         ConditionFirstBoot=yes
-        Wants=network-online.target NetworkManager-wait-online.service
-        After=network-online.target NetworkManager-wait-online.service
+        Wants=network-online.target
+        After=network-online.target
 
         [Service]
         Type=oneshot
-        ExecStart=/usr/local/bin/set-random-ip.sh
+        ExecStartPre=/usr/bin/rpm-ostree cancel
+        ExecStart=/usr/bin/rpm-ostree install -y \
+          https://download.docker.com/linux/fedora/41/x86_64/stable/Packages/docker-buildx-plugin-0.23.0-1.fc41.x86_64.rpm \
+          https://download.docker.com/linux/fedora/41/x86_64/stable/Packages/docker-compose-plugin-2.35.1-1.fc41.x86_64.rpm
+        ExecStartPost=/usr/bin/systemctl reboot --no-wall
         RemainAfterExit=yes
         StandardOutput=journal
         StandardError=journal
@@ -65,6 +61,31 @@ systemd:
         [Install]
         WantedBy=multi-user.target
 
-    # Start the Docker daemon immediately at boot
+    # Assign random IP on first boot
+    - name: set-random-ip.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Set random static IP on first boot only
+        ConditionFirstBoot=yes
+        StartLimitIntervalSec=0
+        StartLimitBurst=0
+        Wants=network-online.target NetworkManager-wait-online.service
+        After=network-online.target NetworkManager-wait-online.service
+
+        [Service]
+        Type=oneshot
+        Restart=no
+        ExecStartPre=/usr/bin/nm-online -q --timeout=30
+        ExecStart=/usr/local/bin/set-random-ip.sh
+        TimeoutStartSec=60
+        RemainAfterExit=yes
+        StandardOutput=journal
+        StandardError=journal
+
+        [Install]
+        WantedBy=multi-user.target
+
+    # Enable Docker daemon
     - name: docker.service
       enabled: true

@@ -154,17 +154,19 @@ scp "${SCP_OPTS[@]}" $APP_DIR/* \
   "$SSH_USER@$VM_IP:~/$APP_DIR"
 
 # 
-# Deploy via docker-compose on VM
+# Deploy via docker compose on VM
 # 
-info "Deploying stack on VM via docker-compose..."
+info "Deploying stack on VM via docker compose..."
 ssh "${SSH_OPTS[@]}" "$SSH_USER@$VM_IP" APP_DIR="$APP_DIR" bash <<'EOF'
   set -euxo pipefail
   cd ~/$APP_DIR
-  docker-compose down --remove-orphans || true
-  docker-compose build
-  docker-compose up -d
+  export DOCKER_BUILDKIT=0
+  export COMPOSE_DOCKER_CLI_BUILD=0
+  docker compose down --remove-orphans || true
+  docker compose build
+  docker compose up -d
   sleep 5
-  docker-compose ps
+  docker compose ps
 EOF
 
 # 
