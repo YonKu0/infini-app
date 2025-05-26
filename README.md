@@ -205,7 +205,7 @@ The `deploy.sh` script automates the deployment of your podman-compose applicati
    * `-d`: Remote directory (default: `app`)
    * `-p`: Application port (default: `5050`)
 
-**Example:**
+**Example(For this demonstration):**
 
 ```bash
  bash scripts/deploy.sh \
