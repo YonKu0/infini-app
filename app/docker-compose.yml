@@ -39,7 +39,7 @@ services:
 
   prometheus:
     container_name: prometheus
-    image: prom/prometheus:latest
+    image: docker.io/prom/prometheus:latest
     restart: unless-stopped
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro,Z

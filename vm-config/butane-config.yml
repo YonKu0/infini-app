@@ -19,9 +19,7 @@ storage:
       user:
         name: infini-ops
       contents:
-        source: "https://raw.githubusercontent.com/YonKu0/infini-app/refs/heads/main/scripts/set-random-ip.sh"
-        verification:
-          hash: "sha256-4adc92c5a4714bf5b10c2cd78f8c3bc63e52e80151c216f8944b6a33795d164d"
+        local: set-random-ip.sh
 
     # Configure Zincati’s maintenance window
     - path: /etc/zincati/config.d/maintenance.toml
@@ -37,22 +35,19 @@ storage:
 
 systemd:
   units:
-    # Layer in Docker CE + Compose/Buildx via official Docker RPMs
+    # 1. Layer required packages and reboot on first boot
     - name: rpm-ostree-install.service
       enabled: true
       contents: |
         [Unit]
-        Description=Layer Docker Compose & plugins via rpm-ostree
+        Description=Layer firewalld and podman-compose via rpm-ostree
         ConditionFirstBoot=yes
         Wants=network-online.target
         After=network-online.target
 
         [Service]
         Type=oneshot
-        ExecStartPre=/usr/bin/rpm-ostree cancel
-        ExecStart=/usr/bin/rpm-ostree install -y \
-          https://download.docker.com/linux/fedora/41/x86_64/stable/Packages/docker-buildx-plugin-0.23.0-1.fc41.x86_64.rpm \
-          https://download.docker.com/linux/fedora/41/x86_64/stable/Packages/docker-compose-plugin-2.35.1-1.fc41.x86_64.rpm
+        ExecStart=/usr/bin/rpm-ostree install -y firewalld podman-compose
         ExecStartPost=/usr/bin/systemctl reboot --no-wall
         RemainAfterExit=yes
         StandardOutput=journal
@@ -61,21 +56,18 @@ systemd:
         [Install]
         WantedBy=multi-user.target
 
-    # Assign random IP on first boot
+    # 2. Assign random static IP (first boot only)
     - name: set-random-ip.service
       enabled: true
       contents: |
         [Unit]
         Description=Set random static IP on first boot only
         ConditionFirstBoot=yes
-        StartLimitIntervalSec=0
-        StartLimitBurst=0
         Wants=network-online.target NetworkManager-wait-online.service
         After=network-online.target NetworkManager-wait-online.service
 
         [Service]
         Type=oneshot
-        Restart=no
         ExecStartPre=/usr/bin/nm-online -q --timeout=30
         ExecStart=/usr/local/bin/set-random-ip.sh
         TimeoutStartSec=60
@@ -86,6 +78,29 @@ systemd:
         [Install]
         WantedBy=multi-user.target
 
-    # Enable Docker daemon
+    # 3. Open firewall ports (runs every boot, not just first boot)
+    - name: open-required-ports.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Open firewall ports 80, 443, 9090 for HTTP, HTTPS, and web app
+        ConditionPathExists=/usr/bin/firewall-cmd
+        After=firewalld.service network-online.target
+        Wants=firewalld.service
+
+        [Service]
+        Type=oneshot
+        ExecStartPre=/usr/bin/test -x /usr/bin/firewall-cmd
+        ExecStart=/usr/bin/firewall-cmd --permanent --add-port=80/tcp
+        ExecStart=/usr/bin/firewall-cmd --permanent --add-port=443/tcp
+        ExecStart=/usr/bin/firewall-cmd --permanent --add-port=5050/tcp
+        ExecStart=/usr/bin/firewall-cmd --permanent --add-port=9090/tcp
+        ExecStartPost=/usr/bin/firewall-cmd --reload
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-user.target
+
+    # 4. Enable Docker daemon (will activate when present)
     - name: docker.service
       enabled: true

@@ -10,8 +10,12 @@ WORKDIR /build
 
 # Install dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip --root-user-action=ignore \
-    && pip install --root-user-action=ignore --prefix=/install -r requirements.txt
+
+# --- Feedback/Best Practice Note ---
+# Using --no-cache-dir with pip install prevents unnecessary cache files from being stored in the Docker image,
+# reducing its size and improving efficiency. This is a best practice for production images.
+RUN pip install --upgrade pip --no-cache-dir --root-user-action=ignore \
+    && pip install --no-cache-dir --root-user-action=ignore --prefix=/install -r requirements.txt
 
 # Copy application code
 COPY app.py ./
